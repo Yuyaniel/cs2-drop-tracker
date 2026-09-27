@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1b1e24" />
+  <title>CS2 掉落记录</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- 顶部 -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="btnBack" title="返回" hidden>‹</button>
+        <div class="topbar-title" id="pageTitle">
+          <span class="logo-dot"></span>
+          <span id="pageText">CS2 掉落记录</span>
+        </div>
+      </div>
+      <div class="topbar-actions" id="homeActions">
+        <button class="icon-btn" id="btnStats" title="统计">▤</button>
+        <button class="icon-btn" id="btnSettings" title="周期设置">⚙</button>
+      </div>
+    </header>
+
+    <!-- 首页 -->
+    <div id="homeView">
+    <!-- 顶部统计 -->
+    <section class="top-stats">
+      <div class="ts-cell">
+        <div class="ts-num"><span id="tsDaysLeft">3</span><small>天</small></div>
+        <div class="ts-label">距下期</div>
+      </div>
+      <div class="ts-cell">
+        <div class="ts-num accent"><small>¥</small><span id="tsTotalValue">0</span></div>
+        <div class="ts-label">总价值</div>
+      </div>
+    </section>
+
+    <!-- 日历 -->
+    <section class="calendar">
+      <div class="cal-head">
+        <button class="cal-nav" id="calPrev">‹</button>
+        <div class="cal-title" id="calTitle">2026年9月</div>
+        <button class="cal-nav" id="calNext">›</button>
+      </div>
+      <div class="cal-week">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </section>
+
+    <!-- 总打卡框（各期打卡记录，最新期在上方，往期往下滑动查看） -->
+    <section class="total-card" id="totalCard"></section>
+    </div>
+
+    <!-- 统计页 -->
+    <div id="statsView" class="stats-page" hidden>
+      <div class="stat-block">
+        <h4>累计总价值</h4>
+        <div class="big-num accent"><span class="cur" id="sCurrency"></span><span id="sTotal">0</span></div>
+        <div class="stat-mini" id="statMini">累计 0 件 · 最贵掉落 -</div>
+      </div>
+      <div class="stat-block">
+        <h4>武器箱掉落次数</h4>
+        <div id="statCases" class="case-list"></div>
+      </div>
+      <div class="stat-block">
+        <h4>按类型</h4>
+        <div id="statByCategory" class="bar-list"></div>
+      </div>
+      <div class="stat-block">
+        <h4>按品质</h4>
+        <div id="statByRarity" class="bar-list"></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-block-head">
+          <h4>各期掉落价值</h4>
+          <select id="statYear" class="year-select"></select>
+        </div>
+        <div id="statByWeek" class="week-list"></div>
+      </div>
+    </div>
+
+    <!-- 悬浮添加按钮 -->
+    <button class="fab" id="btnAdd" title="添加掉落">+</button>
+  </div>
+
+  <!-- 添加/编辑弹窗 -->
+  <div class="modal-mask" id="modal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <span id="modalTitle">添加掉落</span>
+        <button class="icon-btn" id="btnClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <span class="field-label">掉落期</span>
+          <div class="period-info" id="fPeriodInfo">第 1 期 · 09-23 ~ 09-29</div>
+        </div>
+
+        <label class="field">
+          <span class="field-label">掉落日期（期内具体哪天）</span>
+          <select id="fDate" class="input"></select>
+        </label>
+
+        <div class="field">
+          <span class="field-label">快捷打卡（点选即填）</span>
+          <div class="quick-pick" id="quickPick"></div>
+        </div>
+
+        <label class="field">
+          <span class="field-label">饰品名称</span>
+          <input type="text" id="fName" class="input" placeholder="搜索或输入，如 千瓦武器箱" autocomplete="off" />
+          <div class="suggest" id="suggest" hidden></div>
+        </label>
+
+        <div class="field">
+          <span class="field-label">类型</span>
+          <div class="chips" id="fCategory">
+            <button class="chip" data-v="case">武器箱</button>
+            <button class="chip" data-v="skin">皮肤</button>
+            <button class="chip" data-v="sticker">贴纸</button>
+            <button class="chip" data-v="graffiti">涂鸦</button>
+            <button class="chip" data-v="other">其他</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">品质</span>
+          <div class="chips rarity" id="fRarity">
+            <button class="chip r-consumer" data-v="consumer">消费</button>
+            <button class="chip r-industrial" data-v="industrial">工业</button>
+            <button class="chip r-mil-spec" data-v="mil-spec">军规</button>
+            <button class="chip r-restricted" data-v="restricted">受限</button>
+            <button class="chip r-classified" data-v="classified">保密</button>
+            <button class="chip r-covert" data-v="covert">隐秘</button>
+            <button class="chip r-rare" data-v="rare">特殊</button>
+            <button class="chip r-base" data-v="base">无</button>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">数量</span>
+            <div class="stepper">
+              <button id="fQtyMinus">−</button>
+              <input type="number" id="fQty" class="input center" value="1" min="1" />
+              <button id="fQtyPlus">＋</button>
+            </div>
+          </label>
+          <label class="field">
+            <span class="field-label">到手价 <span class="cur-inline" id="currency2"></span></span>
+            <input type="number" id="fPrice" class="input" placeholder="0.00" step="0.01" min="0" inputmode="decimal" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field-label">备注（可选）</span>
+          <input type="text" id="fNote" class="input" placeholder="例如：本期首件掉落、出刀了…" />
+        </label>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost danger" id="btnDelete" hidden>删除</button>
+        <button class="btn primary" id="btnSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div class="modal-mask" id="settingsModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <span>周期设置</span>
+        <button class="icon-btn" id="btnSettingsClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">第 1 期起始日期</span>
+          <input type="date" id="sPeriodStart" class="input" />
+        </label>
+        <label class="field">
+          <span class="field-label">每期天数</span>
+          <input type="number" id="sPeriodDays" class="input" min="1" max="30" step="1" value="7" />
+        </label>
+        <div class="settings-hint" id="settingsPreview"></div>
+
+        <div class="data-mgmt">
+          <h4>数据管理</h4>
+          <div class="data-actions">
+            <button class="btn ghost" id="btnExport">导出备份</button>
+            <button class="btn ghost" id="btnImport">导入备份</button>
+            <button class="btn ghost" id="btnExportCsv">导出 CSV</button>
+            <button class="btn ghost danger" id="btnClearAll">清空数据</button>
+          </div>
+          <p class="data-tip">备份包含全部掉落数据与周期设置，可用于跨设备迁移</p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn primary" id="btnSettingsSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/images.js"></script>
+  <script src="js/items.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
